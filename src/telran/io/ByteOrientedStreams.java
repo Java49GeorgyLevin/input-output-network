@@ -1,4 +1,4 @@
-package telrean.io;
+package telran.io;
 
 import static org.junit.jupiter.api.Assertions.*;
 
