@@ -1,5 +1,5 @@
 package telran.io;
 
 public interface CopyFile {
-	void copy(String pathToSource, String pathToDestination) throws Exception;
+void copy(String pathToSource, String pathToDestination);
 }

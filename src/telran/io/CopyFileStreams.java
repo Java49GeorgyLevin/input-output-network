@@ -1,30 +1,26 @@
 package telran.io;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
+import java.io.*;
 
 public class CopyFileStreams implements CopyFile {
-	private int bufferLength;
+private final int bufferLength;
 	public CopyFileStreams(int bufferLength) {
-		super();
-		this.bufferLength = bufferLength;
-	}
-
-
+	super();
+	this.bufferLength = bufferLength;
+}
 	@Override
-	public void copy(String pathToSource, String pathToDestination) throws Exception{
-		try (InputStream input = new FileInputStream(pathToSource);
-				OutputStream output = new FileOutputStream(pathToDestination)) {			
-			byte[] buf = new byte[bufferLength];
-			int length;
-			while((length = input.read(buf)) > 0) {
-				output.write(buf, 0, length);
+	public void copy(String pathToSource, String pathToDestination){
+		try(FileInputStream input = new FileInputStream(pathToSource);
+				FileOutputStream output = new FileOutputStream(pathToDestination)) {
+			int length = 0;
+			byte[] buffer = new byte[bufferLength];
+			while((length = input.read(buffer)) > 0) {
+				output.write(buffer, 0, length);
 			}
-			Path path = Path.of(pathToDestination);
-			long size = Files.size(path);
-			System.out.printf("output file %s - %s b\n", path, size);			
-		} 
+			
+		}catch (IOException e) {
+			throw new RuntimeException(e.toString());
+		}
 
 	}
 
