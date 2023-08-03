@@ -52,10 +52,12 @@ void sumNumberLines() throws IOException {
 //			res += Integer.parseInt(line);
 //		}
 //	}
+	
 //	try(BufferedReader reader =
 //			new BufferedReader(new FileReader("numbers.txt"))){
 //		res = reader.lines().mapToInt(Integer::parseInt).sum();
 //	}
+	
 	res = Files.lines(Path.of("numbers.txt")).mapToInt(Integer::parseInt).sum();
 	assertEquals(35, res);
 }
