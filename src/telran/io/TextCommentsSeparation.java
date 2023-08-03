@@ -4,22 +4,24 @@ import java.io.*;
 public class TextCommentsSeparation {
 
 	public static void main(String[] args) {
-		// args = {text_and_comments.txt, text.txt, comments.txt}
+		
 		int len = args.length;
+		String A = "There is no resource file.";
+		String B = "There is no path to text.";
+		String C = "There is no path to comments.";
 		if(len < 1) {
-			new RuntimeException("There is no resource file.");
+			throw new RuntimeException(A + " " + B + " " + C);
 		};
 		if(len < 2) {
-			new RuntimeException("There is no path to text.");
+			throw new RuntimeException(B + " " + C);
 		};
 		if(len < 3) {
-			new RuntimeException("There is no path to comments.");
+			throw new RuntimeException(C);
 		}
 
 		try(BufferedReader reader = new BufferedReader(new FileReader(args[0]));
 				PrintWriter printText = new PrintWriter(args[1]);
-				PrintWriter printComments = new PrintWriter(args[2])) {
-			
+				PrintWriter printComments = new PrintWriter(args[2])) {			
 			reader.lines()			
 			.forEach(s -> {
 				if(s.contains("//")) {
