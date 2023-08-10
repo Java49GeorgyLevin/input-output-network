@@ -3,8 +3,10 @@ package telran.employees.test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -80,12 +82,30 @@ class CompanyTest {
 
 	@Test
 	void testGetDepartmentSalaryDistribution() {
-		//TODO
+		DepartmentSalary [] expected = {
+			new DepartmentSalary(DEP2, SALARY2),
+			new DepartmentSalary(DEP1, SALARY1),
+			new DepartmentSalary(DEP3, SALARY3)
+		};
+		DepartmentSalary [] actual = company.getDepartmentSalaryDistribution()
+				.stream().sorted((ds1, ds2) -> Double.compare(ds1.salary(), ds2.salary())).
+				toArray(DepartmentSalary[]::new);
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
 	void testGetSalaryDistribution() {
-		//TODO
+		int interval = 5000;
+		SalaryDistribution[] expected = {
+				new SalaryDistribution(SALARY2, SALARY2 + interval - 1, 2),
+				new SalaryDistribution(SALARY1, SALARY1 + interval - 1, 3),
+				new SalaryDistribution(SALARY3, SALARY3 + interval - 1, 1),
+		};
+		company.addEmployee(new Employee(ID_NOT_EXIST, DEP2, DEP2, 13000,  DATE1));
+		SalaryDistribution[] actual =
+				company.getSalaryDistribution(interval)
+				.toArray(SalaryDistribution[]::new);
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test

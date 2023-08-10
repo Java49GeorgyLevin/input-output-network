@@ -6,6 +6,9 @@ import java.util.stream.Collectors;
 import telran.employees.dto.DepartmentSalary;
 import telran.employees.dto.Employee;
 import telran.employees.dto.SalaryDistribution;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 public class CompanyImpl implements Company {
   LinkedHashMap<Long, Employee> employees = new LinkedHashMap<>();
@@ -45,20 +48,19 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<SalaryDistribution> getSalaryDistribution(int interval) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return employees.values().stream()
+				.collect(Collectors.groupingBy(e -> e.salary()/interval,
+						Collectors.counting()))
+				.entrySet().stream()
+				.map(e -> new SalaryDistribution(e.getKey() * interval,
+						e.getKey() * interval + interval - 1, e.getValue().intValue()))
+				.sorted((sd1, sd2) -> Integer.compare(sd1.minSalary(), sd2.minSalary()))
+						.toList();
 	}
 
-	@Override
-	public void restore(String filePath) {
-		// TODO Auto-generated method stub
+	
 
-	}
-
-	@Override
-	public void save(String filePath) {
-		// TODO Auto-generated method stub
-
-	}
+	
 
 }
