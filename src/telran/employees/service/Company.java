@@ -36,5 +36,11 @@ public interface Company {
 		}
 
 	}
+	//New methods for HW #36
+	List<Employee> getEmployeesByDepartment(String department);
+	List<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo);
+	List<Employee> getEmployeesByAge(int ageFrom, int ageTo);
+	Employee updateSalary(long id, int newSalary);
+	Employee updateDepartment(long id, String newDepartment);
 	
 }
