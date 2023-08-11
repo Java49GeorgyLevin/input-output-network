@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -106,6 +107,41 @@ class CompanyTest {
 				company.getSalaryDistribution(interval)
 				.toArray(SalaryDistribution[]::new);
 		assertArrayEquals(expected, actual);
+	}
+	
+	@Test
+	void testGetEmployeesByDepartment() {
+		Employee[] dep1Expected = {empl1, empl3};
+		Employee[] dep2Expected = {empl2, empl4};
+		Employee[] dep3Expected = {empl5};
+		Employee[] dep1Actual = company.getEmployeesByDepartment(DEP1).toArray(Employee[]::new);
+		Employee[] dep2Actual = company.getEmployeesByDepartment(DEP2).toArray(Employee[]::new);
+		Employee[] dep3Actual = company.getEmployeesByDepartment(DEP3).toArray(Employee[]::new);
+		assertArrayEquals(dep1Expected, dep1Actual);
+		assertArrayEquals(dep2Expected, dep2Actual);
+		assertArrayEquals(dep3Expected, dep3Actual);				
+	}
+	
+	@Test
+	void testGetEmployeesByAge() {
+		Employee[] expected1 = {empl1, empl2, empl3, empl4};
+		Employee[] expected2 = {empl1, empl3, empl5};
+		Employee[] actual1 = company.getEmployeesByAge(22, 40).toArray(Employee[]::new);
+		Employee[] actual2 = company.getEmployeesByAge(18, 25).toArray(Employee[]::new);
+		assertArrayEquals(expected1, actual1);
+		assertArrayEquals(expected2, actual2);
+	}
+	
+	@Test
+	void testUpdateSalary() {
+		assertEquals(empl1, company.updateSalary(ID1, SALARY2));
+		assertEquals(null, company.updateSalary(ID1, SALARY2));		
+	}
+	
+	@Test
+	void testUpdateDepartment() {
+		assertEquals(empl1, company.updateDepartment(ID1, DEP2));
+		assertEquals(null, company.updateDepartment(ID1, DEP2));
 	}
 
 	@Test

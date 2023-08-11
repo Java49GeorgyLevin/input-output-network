@@ -7,6 +7,7 @@ import telran.employees.dto.DepartmentSalary;
 import telran.employees.dto.Employee;
 import telran.employees.dto.SalaryDistribution;
 
+import java.time.LocalDate;
 import java.util.*;
 public class CompanyImpl implements Company {
   LinkedHashMap<Long, Employee> employees = new LinkedHashMap<>();
@@ -85,8 +86,10 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getEmployeesByDepartment(String department) {
-		// TODO Auto-generated method stub
-		return null;
+		
+			return employees.values().stream()
+				.filter(e -> e.department().equals(department))
+				.toList();
 	}
 
 	@Override
@@ -102,24 +105,40 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getEmployeesByAge(int ageFrom, int ageTo) {
-		// TODO Auto-generated method stub
-		return null;
+		int today = LocalDate.now().getYear();
+		
+		return employees.values().stream()
+		.filter(e -> ((today - e.birthDate().getYear() > ageFrom) && (today - e.birthDate().getYear() < ageTo)))
+		.sorted((e1, e2) -> Long.compare(e1.id(), e2.id()))
+		.toList();
+		 
 	}
 
 	@Override
 	public Employee updateSalary(long id, int newSalary) {
-		// TODO Auto-generated method stub
-		return null;
+		Employee empl = getEmployee(id);
+		if(newSalary != empl.salary()) {
+			removeEmployee(id);
+			addEmployee(new Employee(id, empl.name(), empl.department(), newSalary, empl.birthDate()));			
+		} else {
+			empl = null;
+		}
+		
+		return empl;
 	}
 
 	@Override
 	public Employee updateDepartment(long id, String newDepartment) {
-		// TODO Auto-generated method stub
-		return null;
+		Employee empl = getEmployee(id);
+		if(newDepartment != null && !newDepartment.equals(empl.department())) {
+			removeEmployee(id);
+			addEmployee(new Employee(id, empl.name(), newDepartment, empl.salary(), empl.birthDate()));
+		} else {
+			empl = null;
+		}
+
+		return empl;
 	}
-
-	
-
 	
 
 }
