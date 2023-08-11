@@ -12,6 +12,9 @@ import java.util.*;
 public class CompanyImpl implements Company {
   LinkedHashMap<Long, Employee> employees = new LinkedHashMap<>();
   TreeMap<Integer, Collection<Employee>> employeesSalary = new TreeMap<>();
+  HashMap<String, Collection<Employee>> employeesDepartment = new HashMap<>();
+  TreeMap<LocalDate, Collection<Employee>> employeesAge = new TreeMap<>();
+  
 	@Override
 	public boolean addEmployee(Employee empl) {
 		boolean res = false;
@@ -19,15 +22,28 @@ public class CompanyImpl implements Company {
 		if(emplRes == null) {
 			res = true;
 			addEmployeeSalary(empl);
+			addEmployeeDepartment(empl);
+			addEmployeeAge(empl);
 		}
-		return  res;
+		return res;
 	}
 
 	private void addEmployeeSalary(Employee empl) {
 		int salary = empl.salary();
-		employeesSalary.computeIfAbsent(salary, k -> new HashSet<>()).
-		add(empl);
-		
+		employeesSalary.computeIfAbsent(salary, k -> new HashSet<>())
+		.add(empl);		
+	}
+	
+	private void addEmployeeDepartment(Employee empl) {
+		String department = empl.department();
+		employeesDepartment.computeIfAbsent(department, k -> new HashSet<>())
+		.add(empl);
+	}	
+	
+	private void addEmployeeAge(Employee empl) {
+		LocalDate birthDate = empl.birthDate();
+		employeesAge.computeIfAbsent(birthDate, k -> new HashSet<>())
+		.add(empl);		
 	}
 
 	@Override
@@ -35,8 +51,30 @@ public class CompanyImpl implements Company {
 		Employee res = employees.remove(id);
 		if(res != null) {
 			removeEmployeeSalary(res);
+			removeEmployeeDepartment(res);
+			removeEmployeeAge(res);
 		}
 		return res;
+	}
+
+	private void removeEmployeeAge(Employee empl) {
+		LocalDate birthDate = empl.birthDate();
+		Collection<Employee> employeesCol = employeesAge.get(birthDate);
+		employeesCol.remove(empl);
+		if(employees.isEmpty()) {
+			employeesAge.remove(birthDate);
+		}
+		
+	}
+
+	private void removeEmployeeDepartment(Employee empl) {
+		String department = empl.department();
+		Collection<Employee> employeesCol = employeesDepartment.get(department);
+		employeesCol.remove(empl);
+		if(employeesCol.isEmpty()) {
+			employeesDepartment.remove(department);
+		}	
+		
 	}
 
 	private void removeEmployeeSalary(Employee empl) {
@@ -87,9 +125,11 @@ public class CompanyImpl implements Company {
 	@Override
 	public List<Employee> getEmployeesByDepartment(String department) {
 		
-			return employees.values().stream()
-				.filter(e -> e.department().equals(department))
+		return employeesDepartment.getOrDefault(department, Collections.emptyList())
+				.stream()
+				.sorted((e1, e2) -> Long.compare(e1.id(), e2.id()))
 				.toList();
+		
 	}
 
 	@Override
@@ -105,13 +145,22 @@ public class CompanyImpl implements Company {
 
 	@Override
 	public List<Employee> getEmployeesByAge(int ageFrom, int ageTo) {
-		int today = LocalDate.now().getYear();
+		if(ageFrom > ageTo || ageFrom < 0 || ageTo > 100) {
+			return Collections.emptyList();
+		}
 		
-		return employees.values().stream()
-		.filter(e -> ((today - e.birthDate().getYear() > ageFrom) && (today - e.birthDate().getYear() < ageTo)))
-		.sorted((e1, e2) -> Long.compare(e1.id(), e2.id()))
-		.toList();
-		 
+		int yearToday = LocalDate.now().getYear();
+		int dayToday = LocalDate.now().getDayOfYear();
+		LocalDate dateFrom = LocalDate.ofYearDay(yearToday - ageTo - 1, dayToday + 1);
+		LocalDate dateTo = LocalDate.ofYearDay(yearToday - ageFrom, dayToday);
+		
+		
+		return employeesAge.subMap(dateFrom, true, dateTo, true).values().stream()
+				.flatMap(col -> col.stream()
+						.sorted((empl1, empl2) -> 
+						Long.compare(empl1.id(), empl2.id()))
+						)
+				.toList();
 	}
 
 	@Override

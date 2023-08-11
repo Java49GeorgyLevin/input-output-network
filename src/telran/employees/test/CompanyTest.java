@@ -124,7 +124,7 @@ class CompanyTest {
 	
 	@Test
 	void testGetEmployeesByAge() {
-		Employee[] expected1 = {empl1, empl2, empl3, empl4};
+		Employee[] expected1 = {empl2, empl4, empl1, empl3};
 		Employee[] expected2 = {empl1, empl3, empl5};
 		Employee[] actual1 = company.getEmployeesByAge(22, 40).toArray(Employee[]::new);
 		Employee[] actual2 = company.getEmployeesByAge(18, 25).toArray(Employee[]::new);
