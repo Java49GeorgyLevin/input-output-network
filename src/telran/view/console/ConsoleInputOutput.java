@@ -34,6 +34,7 @@ public class ConsoleInputOutput {
 		do {
 			String resInput = readString(prompt);
 			try {
+				running = false;
 				res = mapper.apply(resInput);
 
 			} catch (Exception e) {
@@ -44,6 +45,15 @@ public class ConsoleInputOutput {
 		} while (running);
 		return res;
 	}
+	
+	private <T> void minIllegalArgumentException(T min) {
+		throw new IllegalArgumentException("must be not less than " + min);
+	}
+
+	private <T> void maxIllegalArgumentException(T max) {
+		throw new IllegalArgumentException("must be not greater than " + max);
+	}
+	
 
 	public int readInt(String prompt, String errorPrompt) {
 		return readObject(prompt, errorPrompt, Integer::parseInt);
@@ -55,10 +65,10 @@ public class ConsoleInputOutput {
 
 			int res = Integer.parseInt(string);
 			if (res < min) {
-				throw new IllegalArgumentException("must be not less than " + min);
+				minIllegalArgumentException(min);
 			}
 			if (res > max) {
-				throw new IllegalArgumentException("must be not greater than " + max);
+				maxIllegalArgumentException(max);
 			}
 			return res;
 
@@ -66,37 +76,60 @@ public class ConsoleInputOutput {
 	}
 
 	public long readLong(String prompt, String errorPrompt) {
-		// TODO
-		return 0;
+		return readObject(prompt, errorPrompt, Long::parseLong);
 	}
 
 	public long readLong(String prompt, String errorPrompt, long min, long max) {
-		// TODO
-		return 0;
+		return readObject(String.format("%s[%d - %d]", prompt, min, max), errorPrompt,
+				string -> {
+					
+				Long res = Long.parseLong(string);				
+				if(res < min) {
+					minIllegalArgumentException(min);
+				}
+				if(res > max) {
+					maxIllegalArgumentException(max);
+				}				
+				return res;
+		
+				});
 	}
 
 	public String readString(String prompt, String errorPrompt, Predicate<String> predicate) {
-		// TODO
-		return "";
+			return readObject(String.format("%s: %s", prompt, predicate), errorPrompt, 
+				string -> {		
+				if(!predicate.test(string)) {
+					throw new IllegalArgumentException("does not match the predicate");
+				}
+				return string;				
+	});
 	}
 
 	public String readString(String prompt, String errorPrompt, Set<String> options) {
-		// TODO
-		return "";
+		return readString(String.format(prompt +" " + options.toString()), errorPrompt, options::contains);
 	}
 
-	public LocalDate readDate(String prompt, String errorPrompt) {
-		// TODO
-		return null;
+	public LocalDate readDate(String prompt, String errorPrompt) {		
+		return readObject(prompt, errorPrompt, string -> LocalDate.parse(string));
 	}
 
 	public LocalDate readDate(String prompt, String errorPrompt, LocalDate from, LocalDate to) {
-		// TODO
-		return null;
+		return readObject(String.format("%s[%s - %s]", prompt, from, to), errorPrompt,
+				string -> {
+					LocalDate date = LocalDate.parse(string);
+					
+					if(date.isBefore(from)) {
+						minIllegalArgumentException(from);
+					}
+					if(date.isAfter(to)) {
+						maxIllegalArgumentException(to);
+					}
+					
+					return date;
+				});
 	}
 
 	public double readDouble(String prompt, String errorPrompt) {
-		// TODO
-		return 0;
+		return readObject(prompt, errorPrompt, Double::parseDouble);
 	}
 }
