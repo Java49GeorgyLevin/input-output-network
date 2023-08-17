@@ -9,7 +9,7 @@ import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import telran.view.console.ConsoleInputOutput;
+import telran.view.ConsoleInputOutput;
 
 class ConsoleInputOutputTest {
 ConsoleInputOutput io = new ConsoleInputOutput();
