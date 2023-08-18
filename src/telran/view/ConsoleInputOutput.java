@@ -1,10 +1,6 @@
 package telran.view;
 
 import java.io.*;
-import java.time.LocalDate;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 public class ConsoleInputOutput implements InputOutput{
 	private BufferedReader input = new BufferedReader(new InputStreamReader(System.in));

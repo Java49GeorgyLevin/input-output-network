@@ -12,7 +12,7 @@ public class Menu implements Item {
 		this.name = name;
 		this.items = items;
 	}
-	public Menu (String name, Item ...items) {
+	public Menu(String name, Item ...items) {
 		this(name, new ArrayList<>(Arrays.asList(items)));
 	}
 	@Override
