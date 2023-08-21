@@ -6,13 +6,17 @@ import java.util.function.BiFunction;
 
 public class DatesItem {
 	
-	public static Item[] getDateItems() {
-		Item[] items = { Item.of("Date after a given number of days", io -> calculateDateLong(io, (a,b) -> a.plusDays(b))),
+	public static Item getDateItems(String title) {
+		return Item.of(title, ioM -> {
+			Item[] items = {
+				Item.of("Date after a given number of days", io -> calculateDateLong(io, (a,b) -> a.plusDays(b))),
 				Item.of("Date before a given number of days", io -> calculateDateLong(io, (a,b) -> a.minusDays(b))),
 				Item.of("Date between two dates", io -> calculateDateDate(io, (a,b) ->  ChronoUnit.DAYS.between(b, a))),
-				Item.ofExit()				
-		};
-		return items;
+				Item.ofExit()
+			};
+			Menu menu = new Menu(title, items);
+			menu.perform(ioM);
+			});	
 		}
 		
 		

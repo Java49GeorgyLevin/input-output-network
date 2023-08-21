@@ -10,24 +10,15 @@ public class OperationsApp {
 		menu.perform(io);
 
 	}
-
 	
-	static Item[] getItems() {
-		String numOp = "Number Operations";
-		String dateOp = "Date Operations";
+	static Item[] getItems() {		
 		Item[] items = {
-			subItems(numOp, NumbersItem.getNumberItems()),
-			subItems(dateOp, DatesItem.getDateItems()),
+			NumbersItem.getNumberItems("Number Operations"),
+			DatesItem.getDateItems("Date Operations"),
 			Item.ofExit()
 		};
 		
 		return items;
 	}
-	
-	static Item subItems(String title, Item[] items) {
-		
-		return Item.of(title, io -> new Menu(title, items).perform(io));
-	}
-
 
 }
