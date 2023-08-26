@@ -19,6 +19,8 @@ private static final int MIN_SALARY = 6000;
 private static final int MAX_SALARY = 50000;
 private static final int MAX_AGE = 75;
 private static final int MIN_AGE = 20;
+private static final int MIN_INTERVAL = 500;
+private static final int MAX_INTERVAL = 5000;
 static Company company;
 	public static ArrayList<Item> getCompanyItems(Company company) {
 		CompanyController.company = company;
@@ -33,7 +35,7 @@ static Company company;
 				Item.of("Remove Employee", CompanyController::removeEmployeeItem),
 				Item.of("All Employees", CompanyController::getEmployeesItem),
 				Item.of("Data about Employee", CompanyController::getEmployeeItem),
-				Item.of("Employees by Salary", CompanyController::getEmployeesBySalaryItem),
+				Item.of(" Employees by Salary", CompanyController::getEmployeesBySalaryItem),
 				Item.of("Employees by Department", CompanyController::getEmployeesByDepartmentItem),
 				Item.of("Update salary", CompanyController::updateSalaryItem),
 				Item.of("Departments and Salary", CompanyController::getDepartmentSalaryDistributionItem),
@@ -42,14 +44,39 @@ static Company company;
 				Item.of("Update Department", CompanyController::updateDepartmentItem)
 		};
 	}
+	static private Long getId(InputOutput io, boolean isExists) {
+		Long id = io.readLong("Enter Employee identity", "Wrong identity value",
+				MIN_ID, MAX_ID);
+		Employee empl = company.getEmployee(id);
+		
+		String exceptionText = "";
+		Long res = (empl != null && isExists) || (empl == null && !isExists) ?
+				id : null;
+		if(res == null ) {
+			exceptionText = isExists ? String.format("Employee with id %d doesn't exist", id)
+					: String.format("Employee with id %d already exists", id);
+		} 
+		if (!exceptionText.isEmpty()) {
+			throw new RuntimeException(exceptionText);
+		}
+		return res;
+		
+	}
+	static private  <T> void displayResult(List<T> list, InputOutput io) {
+		if(list.isEmpty()) {
+			io.writeLine("No data matching the request");
+		}
+		list.forEach(io::writeLine);
+	}
 	static private Set<String> departments = new HashSet<>(Arrays.asList(new String[] {
 			"QA", "Development", "Audit", "Management", "Accounting"
 	}));
 	static void addEmployeeItem(InputOutput io) {
-		long id = io.readLong("Enter Employee identity", "Wrong identity value", MIN_ID, MAX_ID);
+		Long id = getId(io, false);
+		
 		String name = io.readString("Enter name", "Wrong name",
 				str -> str.matches("[A-Z][a-z]+"));
-		String department = io.readString("Enter department", "Wrong department", departments );
+		String department = getDepartment(io);
 		int salary = io.readInt("Enter salary", "Wrong salary", MIN_SALARY, MAX_SALARY);
 		LocalDate birthDate = io.readDate("Enter birth data", "Wrong birth date entered",
 				getBirthdate(MAX_AGE), getBirthdate(MIN_AGE));
@@ -57,76 +84,80 @@ static Company company;
 		io.writeLine(res ? String.format("Employee with id %d has been added", id) : 
 			String.format("Employee with id %d already exists", id));
 	}
+	private static String getDepartment(InputOutput io) {
+		return io.readString("Enter department " + departments, "Wrong department", departments );
+	}
 	private static LocalDate getBirthdate(int age) {
 		
 		return LocalDate.now().minusYears(age);
 	}
-	
 	static void removeEmployeeItem(InputOutput io) {
-		long id = io.readLong("Enter Employee's ID to delete", "ID out range", MIN_ID, MAX_ID);
-		Employee empl = company.removeEmployee(id);
-		io.writeLine(empl == null ? "There's not an employee with the ID" : empl + " successfull deleted");
+		Long id = getId(io, true);
+		
+		io.write("Removed employee is ");
+		io.writeLine(company.removeEmployee(id));
 	}
-	
 	static void getEmployeeItem(InputOutput io) {
-		long id = io.readLong("Enter ID", "ID out range", MIN_ID, MAX_ID);
-		Employee empl = company.getEmployee(id);
-		io.writeLine(empl == null ? "There's not an employee with the ID" : empl );
+		Long id = getId(io, true);
+		
+		io.write("employee is ");
+		io.writeLine(company.getEmployee(id));
 	}
-	
 	static void getEmployeesItem(InputOutput io) {
-		company.getEmployees().forEach(io::writeLine);
+		displayResult(company.getEmployees(), io);
 	}
-	
 	static void getDepartmentSalaryDistributionItem(InputOutput io) {
-		company.getDepartmentSalaryDistribution().forEach(io::writeLine);		
+		displayResult(company.getDepartmentSalaryDistribution(), io);
+		
 	}
-	
 	static void getSalaryDistributionItem(InputOutput io) {
-		int interval = io.readInt("Enter interval", "Interval is wrong", 1 , Integer.MAX_VALUE);
-		company.getSalaryDistribution(interval).forEach(io::writeLine);
+		int interval = io.readInt("Enter salary distribution interval" , "Wrong interval",
+				MIN_INTERVAL, MAX_INTERVAL);
+		displayResult(company.getSalaryDistribution(interval), io);
 	}
-	
 	static void getEmployeesByDepartmentItem(InputOutput io) {
-		String department = io.readString("Enter department", "There are not that department", departments);
-		company.getEmployeesByDepartment(department).forEach(io::writeLine);
+		String department = getDepartment(io);
+		displayResult(company.getEmployeesByDepartment(department), io);
 	}
-	
 	static void getEmployeesBySalaryItem(InputOutput io) {
-		int salaryFrom = io.readInt("Enter salary from", "Salary is wrong", MIN_SALARY, MAX_SALARY);
-		int salaryTo = io.readInt("Enter salary to", "Salary is wrong", salaryFrom, MAX_SALARY);
-		company.getEmployeesBySalary(salaryFrom, salaryTo).forEach(io::writeLine);
+		int[] fromTo = getSalaries(io);
+		displayResult(company.getEmployeesBySalary(fromTo[0], fromTo[1]), io);
 	}
-	
+	private static int[] getSalaries(InputOutput io) {
+		int from = io.readInt("Enter salary from", "Wrong salary-from value", MIN_SALARY,
+				MAX_SALARY - 1);
+		int to =  io.readInt("Enter salary to", "Wrong salary-to value", from, MAX_SALARY);
+		return new int[] {from, to};
+	}
 	static void getEmployeesByAgeItem(InputOutput io) {
-		int ageFrom = io.readInt("Enter age from", "The value of age is wrong", MIN_AGE, MAX_AGE);
-		int ageTo = io.readInt("Enter age to", "The value of age is wrong", ageFrom, MAX_AGE);
-		company.getEmployeesByAge(ageFrom, ageTo).forEach(io::writeLine);
+		int [] fromTo = getAgies(io);
+		displayResult(company.getEmployeesByAge(fromTo[0], fromTo[1]), io);
 	}
-	
+	private static int[] getAgies(InputOutput io) {
+		int from = io.readInt("Enter age from", "Wrong age-from value", MIN_AGE, MAX_AGE - 1);
+		int to =  io.readInt("Enter age to", "Wrong age-to value", from, MAX_AGE);
+		return new int[] {from, to};
+	}
 	static void updateSalaryItem(InputOutput io) {
-		long id = io.readLong("Enter ID", "ID out range", MIN_ID, MAX_ID);
-		Employee empl = company.getEmployee(id);
-		if(empl == null) {
-			io.writeLine("There's not an employee with the ID");
-		} else {		
-			int salary = io.readInt("Enter new salary", "Wrong salary", MIN_SALARY, MAX_SALARY);
-			company.updateSalary(id, salary);
-			io.writeLine(empl + " salary successful updated to " + salary);
-		}
+		Long id = getId(io, true);
+		
+		int salary = io.readInt("Enter new salary value", "Wrong salary value",
+				MIN_SALARY, MAX_SALARY);
+		Employee empl = company.updateSalary(id, salary);
+		io.writeLine(String.format("old salary value %d of employee %d"
+				+ " has been updated with new value %d", empl.salary(),
+				empl.id(), salary));
+	}
+	static void updateDepartmentItem(InputOutput io) {
+		Long id = getId(io, true);
+		
+		String department = getDepartment(io);
+		Employee empl = company.updateDepartment(id, department);
+		io.writeLine(String.format("old deprtment %s of employee %d"
+				+ " has been updated with department %s", empl.department(),
+				empl.id(), department));
 	}
 	
-	static void updateDepartmentItem(InputOutput io) {
-		long id = io.readLong("Enter ID", "ID out range", MIN_ID, MAX_ID);
-		Employee empl = company.getEmployee(id);
-		if(empl == null) {
-			io.writeLine("There's not an employee with the ID");
-		} else {		
-			String department = io.readString("Enter department", "Wrong department", departments );
-			company.updateDepartment(id, department);
-			io.writeLine(empl + " department successful updated to " + department);
-		}
-	}	
 	
 
 }
