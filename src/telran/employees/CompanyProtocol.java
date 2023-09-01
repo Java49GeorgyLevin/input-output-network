@@ -1,11 +1,11 @@
 package telran.employees;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-
+import java.util.List;
+import java.util.function.BiFunction;
 import telran.employees.dto.Employee;
 import telran.employees.dto.UpdateData;
-import telran.employees.dto.ReadFromTo;
+import telran.employees.dto.FromTo;
 import telran.employees.service.Company;
 import telran.net.ApplProtocol;
 import telran.net.Request;
@@ -54,43 +54,48 @@ public class CompanyProtocol implements ApplProtocol {
 		return response;
 	}
 	
+	Serializable  employeesFromTo(Serializable data, BiFunction <Integer, Integer, List<Employee>> foo) {
+		FromTo fromTo = (FromTo) data;
+		return (Serializable) foo.apply(fromTo.from(), fromTo.to());
+	}
+	
 	Serializable employees_age(Serializable data) {
-		@SuppressWarnings("unchecked")
-		ReadFromTo<Integer> fromTo = (ReadFromTo<Integer>) data;
-		int from = fromTo.from();
-		int to = fromTo.to();
-		return new ArrayList<> (company.getEmployeesByAge(from, to));
+		return employeesFromTo(data, (a, b) -> company.getEmployeesByAge(a, b) );
 	}
 
 	Serializable employees_salary(Serializable data) {
-		@SuppressWarnings("unchecked")
-		ReadFromTo<Integer> fromTo = (ReadFromTo<Integer>) data;
-		int from = fromTo.from();
-		int to = fromTo.to();
-		return new ArrayList<> (company.getEmployeesBySalary(from, to));
+		return employeesFromTo(data, (a, b) -> company.getEmployeesBySalary(a, b));
 
 	}
 
 	Serializable employees_department(Serializable data) {
 		String department = (String) data;
-		return new ArrayList<> (company.getEmployeesByDepartment(department));
+		return (Serializable) company.getEmployeesByDepartment(department);
 	}
 
 	Serializable salary_distribution(Serializable data) {
 		int interval = (int) data;
 
-		return new ArrayList<> (company.getSalaryDistribution(interval));
+		return (Serializable) company.getSalaryDistribution(interval);
 	}
 
 	Serializable department_salary_distribution(Serializable data) {
 		
-		return new ArrayList<>(company.getDepartmentSalaryDistribution());
+		return (Serializable) company.getDepartmentSalaryDistribution();
 	}
 
 	Serializable employee_remove(Serializable data) {		
 		long id = (long) data;
 		return company.removeEmployee(id);
 	}
+	
+	<T> Serializable updateBy(Long id,  BiFunction <Long, T, Employee> foo, T whatUpdate) {
+
+		
+		return (Serializable) foo.apply(id, whatUpdate);
+		
+	}
+	
 
 	private Serializable salary_update(Serializable data) {
 		@SuppressWarnings("unchecked")
@@ -98,21 +103,22 @@ public class CompanyProtocol implements ApplProtocol {
 		long id = updateData.id();
 		int updateSalary = Integer.parseInt(updateData.data());
 		
-		return company.updateSalary(id, updateSalary);
+		return updateBy(id, (a, b) -> company.updateSalary(a, b), updateSalary);		
+	//alt:	return company.updateSalary(id, updateSalary);
 	}
 		
-	 private Serializable department_update(Serializable data) {
-		
+	 private Serializable department_update(Serializable data) {		
 		@SuppressWarnings("unchecked")
 		UpdateData<String> updateData = (UpdateData<String>) data;
 		long id = updateData.id();
 		String department = updateData.data();
-		return company.updateDepartment(id, department);
+		return updateBy(id, (a, b) -> company.updateDepartment(a, b), department);	
+	//alt:	return company.updateDepartment(id, department);
 	}
 
 	Serializable employees_get(Serializable data) {
 		
-		return new ArrayList<> (company.getEmployees());
+		return (Serializable) company.getEmployees();
 	}
 
 	Serializable employee_get(Serializable data) {
