@@ -1,7 +1,6 @@
 package telran.employees;
 
 import java.io.IOException;
-
 import telran.employees.service.*;
 import telran.net.TcpServer;
 
@@ -18,5 +17,5 @@ public class CompanyServerAppl {
 		TcpServer tcpServer = new TcpServer(PORT , new CompanyProtocol(company));
 		tcpServer.run();
 
-}
+	}
 }
