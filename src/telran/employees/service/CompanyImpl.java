@@ -3,7 +3,6 @@ package telran.employees.service;
 import java.util.concurrent.locks.*;
 import java.util.stream.Collectors;
 
-import telran.employees.Monitor;
 import telran.employees.dto.*;
 import java.time.LocalDate;
 import java.util.*;
@@ -12,32 +11,16 @@ public class CompanyImpl implements Company {
 	static ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 	static Lock readLock = rwLock.readLock();
 	static Lock writeLock = rwLock.writeLock();
-	static Monitor monitor = new Monitor(readLock, writeLock);
 	LinkedHashMap<Long, Employee> employees = new LinkedHashMap<>();
 	TreeMap<Integer, Collection<Employee>> employeesSalary = new TreeMap<>();
 	TreeMap<LocalDate, Collection<Employee>> employeesAge = new TreeMap<>();
 	HashMap<String, Collection<Employee>> employeesDepartment = new HashMap<>();
-	
-	private void monitorReadWriteLock() {
-		monitor.read().lock();
-		monitor.write().lock();
-	}
-	private void monitorWriteReadUnlock() {
-		monitor.write().unlock();
-		monitor.read().unlock();		
-	}
-	private void monitorWriteLock() {		
-		monitor.write().lock();
-	}
-	private void monitorWriteUnlock() {		
-		monitor.write().unlock();
-	}
 
 	@Override
 	public boolean addEmployee(Employee empl) {
 		boolean res = false;
 		try {
-			monitorReadWriteLock();		
+			writeLock.lock();		
 		Employee emplRes = employees.putIfAbsent(empl.id(), empl);
 		if (emplRes == null) {
 			res = true;
@@ -46,7 +29,7 @@ public class CompanyImpl implements Company {
 			addEmployeeDepartment(empl);
 			} 
 		} finally {
-			monitorWriteReadUnlock();
+			writeLock.unlock();
 		}
 		return res;
 	}
@@ -82,7 +65,7 @@ public class CompanyImpl implements Company {
 	public Employee removeEmployee(long id) {
 		Employee res = null;
 		try {
-			monitorReadWriteLock();
+			writeLock.lock();
 		
 		res = employees.remove(id);
 		if (res != null) {
@@ -91,7 +74,7 @@ public class CompanyImpl implements Company {
 			removeEmployeeDepartment(res);
 			}
 		} finally {
-			monitorWriteReadUnlock();
+			writeLock.unlock();
 		}
 		return res;
 	}
@@ -118,10 +101,10 @@ public class CompanyImpl implements Company {
 	public Employee getEmployee(long id) {
 		Employee empl = null;
 		try {
-			monitorWriteLock();;
+			readLock.lock();
 			empl = employees.get(id);
 		} finally {
-			monitorWriteUnlock();;
+			readLock.unlock();
 		}
 
 		return empl;
@@ -131,10 +114,10 @@ public class CompanyImpl implements Company {
 	public List<Employee> getEmployees() {
 		List<Employee> res = null;
 		try {
-			monitorWriteLock();
+			readLock.lock();
 			res = new ArrayList<>(employees.values());
 		} finally {
-			monitorWriteUnlock();
+			readLock.unlock();
 		}
 
 		return res;
@@ -144,12 +127,12 @@ public class CompanyImpl implements Company {
 	public List<DepartmentSalary> getDepartmentSalaryDistribution() {
 		List<DepartmentSalary> res = null;
 		try {
-			monitorWriteLock();
+			readLock.lock();
 			res = employees.values().stream()
 				.collect(Collectors.groupingBy(Employee::department, Collectors.averagingInt(Employee::salary)))
 				.entrySet().stream().map(e -> new DepartmentSalary(e.getKey(), e.getValue())).toList();
 		} finally {
-			monitorWriteUnlock();
+			readLock.unlock();
 		}
 		return res;
 	}
@@ -158,14 +141,14 @@ public class CompanyImpl implements Company {
 	public List<SalaryDistribution> getSalaryDistribution(int interval) {
 		List<SalaryDistribution> res = null;
 		try {
-			monitorWriteLock();
+			readLock.lock();
 			res = employees.values().stream()
 				.collect(Collectors.groupingBy(e -> e.salary() / interval, Collectors.counting())).entrySet().stream()
 				.map(e -> new SalaryDistribution(e.getKey() * interval, e.getKey() * interval + interval - 1,
 						e.getValue().intValue()))
 				.sorted((sd1, sd2) -> Integer.compare(sd1.minSalary(), sd2.minSalary())).toList();
 		} finally {
-			monitorWriteUnlock();
+			readLock.unlock();
 		}
 		return res;
 	}
@@ -174,14 +157,14 @@ public class CompanyImpl implements Company {
 	public List<Employee> getEmployeesByDepartment(String department) {
 		List<Employee> res = null;
 		try {
-			monitorWriteLock();		
+			readLock.lock();		
 			Collection<Employee> employeesCol = employeesDepartment.get(department);
 			res = new ArrayList<>();
 				if (employeesCol != null) {
 					res.addAll(employeesCol);
 				}
 		} finally {
-			monitorWriteUnlock();
+			readLock.unlock();
 		}
 		return res;
 	}
@@ -190,12 +173,12 @@ public class CompanyImpl implements Company {
 	public List<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo) {
 		List<Employee> res = null;
 		try {
-			monitorWriteLock();
+			readLock.lock();
 			res = employeesSalary.subMap(salaryFrom, true, salaryTo, true).values().stream()
 				.flatMap(col -> col.stream().sorted((empl1, empl2) -> Long.compare(empl1.id(), empl2.id())))
 				.toList();
 		} finally {
-			monitorWriteUnlock();
+			readLock.unlock();
 		}
 		return res;
 	}
@@ -204,7 +187,7 @@ public class CompanyImpl implements Company {
 	public List<Employee> getEmployeesByAge(int ageFrom, int ageTo) {
 		List<Employee> res = null;
 		try {
-			monitorWriteLock();
+			readLock.lock();
 			LocalDate dateTo = LocalDate.now().minusYears(ageFrom);
 			LocalDate dateFrom = LocalDate.now().minusYears(ageTo);
 			res = employeesAge.subMap(dateFrom, true, dateTo, true).values().stream()
@@ -212,7 +195,7 @@ public class CompanyImpl implements Company {
 				.sorted((empl1, empl2) -> Long.compare(empl1.id(), empl2.id())))
 				.toList();
 		} finally {
-			monitorWriteUnlock();
+			readLock.unlock();
 		}
 		return res;		
 	}
@@ -221,7 +204,7 @@ public class CompanyImpl implements Company {
 	public Employee updateSalary(long id, int newSalary) {
 		Employee empl = null;
 		try {
-			monitorReadWriteLock();
+			readLock.lock();
 			empl = removeEmployee(id);
 		if(empl != null) {
 			Employee newEmployee = new Employee(id, empl.name(),
@@ -229,7 +212,7 @@ public class CompanyImpl implements Company {
 			addEmployee(newEmployee);
 			} 
 		}finally {
-			monitorWriteReadUnlock();
+			readLock.unlock();
 		}		
 		return empl;
 	}
@@ -238,7 +221,7 @@ public class CompanyImpl implements Company {
 	public Employee updateDepartment(long id, String newDepartment) {
 		Employee empl = null;
 		try {
-			monitorReadWriteLock();
+			readLock.lock();
 			empl = removeEmployee(id);
 		if(empl != null) {
 			Employee newEmployee = new Employee(id, empl.name(),
@@ -246,7 +229,7 @@ public class CompanyImpl implements Company {
 			addEmployee(newEmployee);
 			}
 		} finally {
-			monitorWriteReadUnlock();
+			readLock.unlock();
 		}
 		return empl;
 	}
